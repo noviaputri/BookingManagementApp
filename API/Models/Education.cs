@@ -2,9 +2,11 @@
 
 namespace API.Models;
 
+// Defines Education class and the annotation table
 [Table("tb_m_educations")]
 public class Education : BaseClass
 {
+    // Defines properties for Education class and the annotation column
     [Column("major", TypeName = "nvarchar(100)")]
     public string Major { get; set; }
     [Column("degree", TypeName = "nvarchar(100)")]

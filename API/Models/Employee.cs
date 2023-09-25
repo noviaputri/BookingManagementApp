@@ -3,9 +3,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace API.Models;
 
+// Defines Employee class and the annotation table
 [Table("tb_m_employees")]
 public class Employee : BaseClass
 {
+    // Defines properties for Employee class and the annotation column
     [Column("nik", TypeName = "nchar(6)")]
     public string Nik { get; set; }
     [Column("first_name", TypeName = "nvarchar(100)")]

@@ -2,9 +2,11 @@
 
 namespace API.Models;
 
+// Defines Account class and the annotation table
 [Table("tb_m_accounts")]
 public class Account : BaseClass
 {
+    // Defines properties for Account class and the annotation column
     [Column("password", TypeName = "nvarchar(max)")]
     public string Password { get; set; }
     //public bool IsDeleted { get; set; }

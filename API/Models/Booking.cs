@@ -3,9 +3,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace API.Models;
 
+// Defines Booking class and the annotation table
 [Table("tb_tr_bookings")]
 public class Booking : BaseClass
 {
+    // Defines properties for Booking class and the annotation column
     [Column("start_date")]
     public DateTime StartDate { get; set; }
     [Column("end_date")]
