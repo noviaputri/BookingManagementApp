@@ -5,7 +5,7 @@ namespace API.Models;
 
 // Defines Employee class and the annotation table
 [Table("tb_m_employees")]
-public class Employee : BaseClass
+public class Employee : BaseEntity
 {
     // Defines properties for Employee class and the annotation column
     [Column("nik", TypeName = "nchar(6)")]
@@ -24,4 +24,9 @@ public class Employee : BaseClass
     public string Email { get; set; }
     [Column("phone_number", TypeName = "nvarchar(20)")]
     public string PhoneNumber { get; set; }
+
+    // Cardinality
+    public Account? Account { get; set; }
+    public Education? Education { get; set; }
+    public ICollection<Booking>? Bookings { get; set; }
 }

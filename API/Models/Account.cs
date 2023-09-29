@@ -4,7 +4,7 @@ namespace API.Models;
 
 // Defines Account class and the annotation table
 [Table("tb_m_accounts")]
-public class Account : BaseClass
+public class Account : BaseEntity
 {
     // Defines properties for Account class and the annotation column
     [Column("password", TypeName = "nvarchar(max)")]
@@ -16,4 +16,8 @@ public class Account : BaseClass
     public bool IsUsed { get; set; }
     [Column("expired_time")]
     public DateTime ExpiredTime { get; set; }
+
+    // Cardinality
+    public ICollection<AccountRole>? AccountRoles { get; set; }
+    public Employee? Employee { get; set; }
 }

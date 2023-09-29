@@ -4,7 +4,7 @@ namespace API.Models;
 
 // Defines Education class and the annotation table
 [Table("tb_m_educations")]
-public class Education : BaseClass
+public class Education : BaseEntity
 {
     // Defines properties for Education class and the annotation column
     [Column("major", TypeName = "nvarchar(100)")]
@@ -15,4 +15,8 @@ public class Education : BaseClass
     public float Gpa { get; set; }
     [Column("university_guid")]
     public Guid UniversityGuid { get; set; }
+
+    // Cardinality
+    public Employee? Employee { get; set; }
+    public University? University { get; set; }
 }

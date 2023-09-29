@@ -5,7 +5,7 @@ namespace API.Models;
 
 // Defines Booking class and the annotation table
 [Table("tb_tr_bookings")]
-public class Booking : BaseClass
+public class Booking : BaseEntity
 {
     // Defines properties for Booking class and the annotation column
     [Column("start_date")]
@@ -20,4 +20,8 @@ public class Booking : BaseClass
     public Guid RoomGuid { get; set; }
     [Column("employee_guid")]
     public Guid EmployeeGuid { get; set; }
+
+    // Cardinality
+    public Employee? Employee { get; set; }
+    public Room? Room { get; set; }
 }
