@@ -1,5 +1,6 @@
 ﻿using API.Contracts;
 using API.Models;
+using API.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -67,23 +68,28 @@ public class BookingController : ControllerBase
     {
         // Calls the Update method of the _bookingRepository field with the booking parameter and assigns the result to a local variable named result.
         var result = _bookingRepository.Update(booking);
-        if (result is false)
+        if (!result)
         {
             return BadRequest("Failed to update data");
         }
-        return Ok(result);
+        return Ok("Data Updated");
     }
 
     [HttpDelete]
-    // Declares a public method named Delete that takes a Booking parameter and returns an IActionResult.
-    public IActionResult Delete(Booking booking)
+    // Declares a public method named Delete that takes a Guid parameter and returns an IActionResult.
+    public IActionResult Delete(Guid guid)
     {
-        // Calls the Delete method of the _bookingRepository field with the booking parameter and assigns the result to a local variable named result.
-        var result = _bookingRepository.Delete(booking);
-        if (result is false)
+        var entity = _bookingRepository.GetByGuid(guid);
+        if (entity is null)
         {
-            return BadRequest("Failed to delete data");
+            return NotFound("Id Not Found");
         }
-        return Ok(result);
+        // Calls the Delete method of the _bookingRepository field with the entity parameter and assigns the result to a local variable named result.
+        var result = _bookingRepository.Delete(entity);
+        if (!result)
+        {
+            return BadRequest("Failed to delete data"); // Returns a 400 Bad Request response with a message if the result is false.
+        }
+        return Ok("Data Deleted"); // Returns a 200 OK response with a message if it is not false.
     }
 }

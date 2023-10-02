@@ -3,12 +3,6 @@
 namespace API.Contracts;
 
 // Defines interface class for UniversityRepository
-public interface IUniversityRepository
+public interface IUniversityRepository : IGeneralRepository<University>
 {
-    // Declares all method in IUniversityRepository interface
-    IEnumerable<University> GetAll();
-    University? GetByGuid(Guid guid);
-    University? Create(University university);
-    bool Update(University university);
-    bool Delete(University university);
 }

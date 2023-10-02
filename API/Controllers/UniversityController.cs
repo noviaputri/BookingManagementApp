@@ -59,22 +59,27 @@ public class UniversityController : ControllerBase
     public IActionResult Update(University university)
     {
         var result = _universityRepository.Update(university);
-        if(result is false)
+        if(!result)
         {
             return BadRequest("Failed to update data");
         }
-        return Ok(result);
+        return Ok("Data Updated");
     }
 
     // Handling DELETE requests to delete an existing university from the repository
     [HttpDelete]
-    public IActionResult Delete(University university)
+    public IActionResult Delete(Guid guid)
     {
-        var result = _universityRepository.Delete(university);
-        if (result is false)
+        var entity = _universityRepository.GetByGuid(guid);
+        if (entity is null)
+        {
+            return NotFound("Id Not Found");
+        }
+        var result = _universityRepository.Delete(entity);
+        if (!result)
         {
             return BadRequest("Failed to delete data");
         }
-        return Ok(result);
+        return Ok("Data Deleted");
     }
 }

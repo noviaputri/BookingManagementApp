@@ -1,5 +1,6 @@
 ﻿using API.Contracts;
 using API.Models;
+using API.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -63,23 +64,28 @@ public class EmployeeController : ControllerBase
     {
         // Calls the Update method of the _employeeRepository field with the employee parameter and assigns the result to a local variable named result.
         var result = _employeeRepository.Update(employee);
-        if (result is false)
+        if (!result)
         {
             return BadRequest("Failed to update data"); // Returns a 400 Bad Request response with a message if the result is false.
         }
-        return Ok(result); // Returns a 200 OK response with the result if it is not false.
+        return Ok("Data Updated"); // Returns a 200 OK response with a message if it is not false.
     }
 
     [HttpDelete]
-    // Declares a public method named Delete that takes an Employee parameter and returns an IActionResult.
-    public IActionResult Delete(Employee employee)
+    // Declares a public method named Delete that takes a Guid parameter and returns an IActionResult.
+    public IActionResult Delete(Guid guid)
     {
-        // Calls the Delete method of the _employeeRepository field with the employee parameter and assigns the result to a local variable named result.
-        var result = _employeeRepository.Delete(employee);
-        if (result is false)
+        var entity = _employeeRepository.GetByGuid(guid);
+        if (entity is null)
         {
-            return BadRequest("Failed to delete data");
+            return NotFound("Id Not Found");
         }
-        return Ok(result);
+        // Calls the Delete method of the _employeeRepository field with the entity parameter and assigns the result to a local variable named result.
+        var result = _employeeRepository.Delete(entity);
+        if (!result)
+        {
+            return BadRequest("Failed to delete data"); // Returns a 400 Bad Request response with a message if the result is false.
+        }
+        return Ok("Data Deleted"); // Returns a 200 OK response with a message if it is not false.
     }
 }
