@@ -6,23 +6,28 @@ namespace API.Repositories;
 
 public class UniversityRepository : IUniversityRepository
 {
+    // The context used to interact with the database
     private readonly BookingManagementDbContext _context;
 
+    // Initializes a new instance of the UniversityRepository class with BookingManagementDbContext object as a parameter
     public UniversityRepository(BookingManagementDbContext context)
     {
         _context = context;
     }
 
+    // Retrieves all universities from the database.
     public IEnumerable<University> GetAll()
     {
         return _context.Set<University>().ToList();
     }
 
+    // Retrieves a university by its guid
     public University? GetByGuid(Guid guid)
     {
         return _context.Set<University>().Find(guid);
     }
 
+    // Creates a new university in the database
     public University? Create(University university)
     {
         try
@@ -37,6 +42,7 @@ public class UniversityRepository : IUniversityRepository
         }
     }
 
+    // Updates an existing university in the database
     public bool Update(University university)
     {
         try
@@ -51,6 +57,7 @@ public class UniversityRepository : IUniversityRepository
         }
     }
 
+    // Deletes an existing university from the database
     public bool Delete(University university)
     {
         try

@@ -6,15 +6,19 @@ namespace API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+// Declares a new class named UniversityController that inherits from ControllerBase.
 public class UniversityController : ControllerBase
 {
+    // Declares a private field of type IUniversityRepository.
     private readonly IUniversityRepository _universityRepository;
 
+    // Declares a public constructor that takes an IUniversityRepository parameter.
     public UniversityController(IUniversityRepository universityRepository)
     {
         _universityRepository = universityRepository;
     }
 
+    // Handling GetAll requests to retrieves all universities from the repository
     [HttpGet]
     public IActionResult GetAll()
     {
@@ -26,6 +30,7 @@ public class UniversityController : ControllerBase
         return Ok(result);
     }
 
+    // Handling GetById requests to retrieves a university by its guid
     [HttpGet("{guid}")]
     public IActionResult GetByGuid(Guid guid)
     {
@@ -37,6 +42,7 @@ public class UniversityController : ControllerBase
         return Ok(result);
     }
 
+    // Handling CREATE requests to creates a new university in the repository
     [HttpPost]
     public IActionResult Create(University university)
     {
@@ -48,6 +54,7 @@ public class UniversityController : ControllerBase
         return Ok(result);
     }
 
+    // Handling UPDATE requests to updates an existing university in the repository
     [HttpPut]
     public IActionResult Update(University university)
     {
@@ -59,6 +66,7 @@ public class UniversityController : ControllerBase
         return Ok(result);
     }
 
+    // Handling DELETE requests to delete an existing university from the repository
     [HttpDelete]
     public IActionResult Delete(University university)
     {
