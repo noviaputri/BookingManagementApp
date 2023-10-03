@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "DuchTH2sxaBJOZl0wNYRB8GHNpFh3RXtuNcNKA3iv8XaXvhm3OC8Ykzl6oXvBmSHe9Pku54UFzKSo7i5BO0WwQ==",
+  "dgSpecHash": "NJ1LaD2/iKXQygU7cnHg5k+WbwqQWeOmth562DZRT9/M6ik53tg62AVtu/7oPZvLRfUvdkXKYDDz8n3QJyd26w==",
   "success": true,
   "projectFilePath": "C:\\Users\\novia\\source\\repos\\BookingManagementApp\\API\\API.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\novia\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\novia\\.nuget\\packages\\humanizer.core\\2.8.26\\humanizer.core.2.8.26.nupkg.sha512",
     "C:\\Users\\novia\\.nuget\\packages\\microsoft.csharp\\4.5.0\\microsoft.csharp.4.5.0.nupkg.sha512",
     "C:\\Users\\novia\\.nuget\\packages\\microsoft.data.sqlclient\\2.1.4\\microsoft.data.sqlclient.2.1.4.nupkg.sha512",

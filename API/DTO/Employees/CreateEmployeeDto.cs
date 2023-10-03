@@ -6,7 +6,6 @@ namespace API.DTO.Employees;
 // Declares a new public class named CreateEmployeeDto.
 public class CreateEmployeeDto
 {
-    public string Nik { get; set; } // Declares a public property named Nik of type string.
     public string FirstName { get; set; } // Declares a public property named FirstName of type string.
     public string? LastName { get; set; } // Declares a public property named LastName of type string.
     public DateTime BirthDate { get; set; } // Declares a public property named BirthDate of type DateTime.
@@ -21,7 +20,6 @@ public class CreateEmployeeDto
         // Returns a new Employee object with the properties of the createEmployeeDto parameter.
         return new Employee
         {
-            Nik = createEmployeeDto.Nik,
             FirstName = createEmployeeDto.FirstName,
             LastName = createEmployeeDto.LastName,
             BirthDate = createEmployeeDto.BirthDate,
