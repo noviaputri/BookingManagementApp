@@ -1,6 +1,6 @@
 ﻿using API.Contracts;
+using API.DTO.Roles;
 using API.Models;
-using API.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -29,7 +29,10 @@ public class RoleController : ControllerBase
         {
             return NotFound("Data Not Found"); // Returns a 404 Not Found response with a message if the result is empty.
         }
-        return Ok(result); // Returns a 200 OK response with the result if it is not empty.
+        // Converts each Role object in the result to a RoleDto object and assigns the result to a local variable named data.
+        var data = result.Select(x => (RoleDto)x);
+        // Returns a 200 OK response with the data if it is not empty.
+        return Ok(data);
     }
 
     [HttpGet("{guid}")]
@@ -42,33 +45,46 @@ public class RoleController : ControllerBase
         {
             return NotFound("Id Not Found");
         }
-        return Ok(result);
+        // Returns a 200 OK response with the RoleDto object created from the result object.
+        return Ok((RoleDto)result);
     }
 
     [HttpPost]
     // Declares a public method named Create that takes a Role parameter and returns an IActionResult.
-    public IActionResult Create(Role role)
+    public IActionResult Create(CreateRoleDto roleDto)
     {
-        // Calls the Create method of the _roleRepository field with the role parameter and assigns the result to a local variable named result.
-        var result = _roleRepository.Create(role);
+        // Calls the Create method of the _roleRepository field with the roleDto parameter and assigns the result to a local variable named result.
+        var result = _roleRepository.Create(roleDto);
         if (result is null)
         {
             return BadRequest("Failed to create data"); // Returns a 400 Bad Request response with a message if the result is null.
         }
-        return Ok(result); // Returns a 200 OK response with the result if it is not null.
+        // Returns a 200 OK response with the RoleDto object created from the result object.
+        return Ok((RoleDto)result);
     }
 
     [HttpPut]
-    // Declares a public method named Update that takes a Role parameter and returns an IActionResult.
-    public IActionResult Update(Role role)
+    // Declares a public method named Update that takes a RoleDto parameter and returns an IActionResult.
+    public IActionResult Update(RoleDto roleDto)
     {
-        // Calls the Update method of the _roleRepository field with the role parameter and assigns the result to a local variable named result.
-        var result = _roleRepository.Update(role);
+        // Calls the GetByGuid method of the _roleRepository field with the Guid property of the roleDto parameter.
+        // Assigns the result to a local variable named entity.
+        var entity = _roleRepository.GetByGuid(roleDto.Guid);
+        if (entity is null)
+        {
+            return NotFound("Id Not Found"); // Returns a 404 Not Found response with a message if the entity is null.
+        }
+        // Assigns the roleDto parameter to a new Role object named toUpdate.
+        Role toUpdate = roleDto;
+        // Assigns the CreatedDate property of the entity object to the CreatedDate property of the toUpdate object.
+        toUpdate.CreatedDate = entity.CreatedDate;
+        // Calls the Update method of the _roleRepository field with the toUpdate object and assigns the result to a local variable named result.
+        var result = _roleRepository.Update(toUpdate);
         if (!result)
         {
-            return BadRequest("Failed to update data");
+            return BadRequest("Failed to update data"); // Returns a 400 Bad Request response with a message if the result is false.
         }
-        return Ok("Data Updated");
+        return Ok("Data Updated"); // Returns a 200 OK response with a message if the update was successful.
     }
 
     [HttpDelete]

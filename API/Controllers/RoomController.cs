@@ -1,6 +1,6 @@
 ﻿using API.Contracts;
+using API.DTO.Rooms;
 using API.Models;
-using API.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -29,7 +29,10 @@ public class RoomController : ControllerBase
         {
             return NotFound("Data Not Found"); // Returns a 404 Not Found response with a message if the result is empty.
         }
-        return Ok(result); // Returns a 200 OK response with the result if it is not empty.
+        // Converts each Room object in the result to a RoomDto object and assigns the result to a local variable named data.
+        var data = result.Select(x => (RoomDto)x);
+        // Returns a 200 OK response with the data if it is not empty.
+        return Ok(data);
     }
 
     [HttpGet("{guid}")]
@@ -42,33 +45,46 @@ public class RoomController : ControllerBase
         {
             return NotFound("Id Not Found");
         }
-        return Ok(result);
+        // Returns a 200 OK response with the RoomDto object created from the result object.
+        return Ok((RoomDto)result);
     }
 
     [HttpPost]
-    // Declares a public method named Create that takes a Room parameter and returns an IActionResult.
-    public IActionResult Create(Room room)
+    // Declares a public method named Create that takes a CreateRoomDto parameter and returns an IActionResult.
+    public IActionResult Create(CreateRoomDto roomDto)
     {
-        // Calls the Create method of the _roomRepository field with the room parameter and assigns the result to a local variable named result.
-        var result = _roomRepository.Create(room);
+        // Calls the Create method of the _roomRepository field with the roomDto parameter and assigns the result to a local variable named result.
+        var result = _roomRepository.Create(roomDto);
         if (result is null)
         {
             return BadRequest("Failed to create data"); // Returns a 400 Bad Request response with a message if the result is null.
         }
-        return Ok(result); // Returns a 200 OK response with the result if it is not null.
+        // Returns a 200 OK response with the RoomDto object created from the result object.
+        return Ok((RoomDto)result);
     }
 
     [HttpPut]
-    // Declares a public method named Update that takes a Room parameter and returns an IActionResult.
-    public IActionResult Update(Room room)
+    // Declares a public method named Update that takes a RoomDto parameter and returns an IActionResult.
+    public IActionResult Update(RoomDto roomDto)
     {
-        // Calls the Update method of the _roomRepository field with the room parameter and assigns the result to a local variable named result.
-        var result = _roomRepository.Update(room);
+        // Calls the GetByGuid method of the _roomRepository field with the Guid property of the roomDto parameter.
+        // Assigns the result to a local variable named entity.
+        var entity = _roomRepository.GetByGuid(roomDto.Guid);
+        if (entity is null)
+        {
+            return NotFound("Id Not Found"); // Returns a 404 Not Found response with a message if the entity is null.
+        }
+        // Assigns the roomDto parameter to a new Room object named toUpdate.
+        Room toUpdate = roomDto;
+        // Assigns the CreatedDate property of the entity object to the CreatedDate property of the toUpdate object.
+        toUpdate.CreatedDate = entity.CreatedDate;
+        // Calls the Update method of the _roomRepository field with the toUpdate object and assigns the result to a local variable named result.
+        var result = _roomRepository.Update(toUpdate);
         if (!result)
         {
-            return BadRequest("Failed to update data");
+            return BadRequest("Failed to update data"); // Returns a 400 Bad Request response with a message if the result is false.
         }
-        return Ok("Data Updated");
+        return Ok("Data Updated"); // Returns a 200 OK response with a message if the update was successful.
     }
 
     [HttpDelete]

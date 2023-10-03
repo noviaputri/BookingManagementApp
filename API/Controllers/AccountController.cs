@@ -1,6 +1,6 @@
 ﻿using API.Contracts;
+using API.DTO.Accounts;
 using API.Models;
-using API.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -19,8 +19,7 @@ public class AccountController : ControllerBase
         _accountRepository = accountRepository;
     }
 
-    // This attribute specifies that this method should handle HTTP GET requests.
-    [HttpGet]
+    [HttpGet] // This attribute specifies that this method should handle HTTP GET requests.
     // Declares a public method named GetAll that returns an IActionResult.
     public IActionResult GetAll()
     {
@@ -31,12 +30,13 @@ public class AccountController : ControllerBase
             // Returns a 404 Not Found response with a message if the result is empty.
             return NotFound("Data Not Found");
         }
-        // Returns a 200 OK response with the result if it is not empty.
-        return Ok(result);
+        // Converts each Account object in the result to a AccountDto object and assigns the result to a local variable named data.
+        var data = result.Select(x => (AccountDto)x);
+        // Returns a 200 OK response with the data if it is not empty.
+        return Ok(data);
     }
 
-    // This attribute specifies that this method should handle HTTP GET requests with a GUID parameter in the URL.
-    [HttpGet("{guid}")]
+    [HttpGet("{guid}")] // This attribute specifies that this method should handle HTTP GET requests with a GUID parameter in the URL.
     // Declares a public method named GetByGuid that takes a Guid parameter and returns an IActionResult.
     public IActionResult GetByGuid(Guid guid)
     {
@@ -47,44 +47,50 @@ public class AccountController : ControllerBase
             // Returns a 404 Not Found response with a message if the result is empty.
             return NotFound("Id Not Found");
         }
-        // Returns a 200 OK response with the result if it is not empty.
-        return Ok(result);
+        // Returns a 200 OK response with the AccountDto object created from the result object.
+        return Ok((AccountDto)result);
     }
 
-    // This attribute specifies that this method should handle HTTP POST requests.
-    [HttpPost]
-    // Declares a public method named Create that takes an Account parameter and returns an IActionResult.
-    public IActionResult Create(Account account)
+    [HttpPost] // This attribute specifies that this method should handle HTTP POST requests.
+    // Declares a public method named Create that takes an CreateAccountDto parameter and returns an IActionResult.
+    public IActionResult Create(CreateAccountDto accountDto)
     {
-        // Calls the Create method of the _accountRepository field with the account parameter and assigns the result to a local variable named result.
-        var result = _accountRepository.Create(account);
+        // Calls the Create method of the _accountRepository field with the accountDto parameter and assigns the result to a local variable named result.
+        var result = _accountRepository.Create(accountDto);
         if (result is null)
         {
             // Returns a 400 Bad Request response with a message if the result is null.
             return BadRequest("Failed to create data");
         }
-        // Returns a 200 OK response with the result if it is not null.
-        return Ok(result);
+        // Returns a 200 OK response with the AccountDto object created from the result object.
+        return Ok((AccountDto)result);
     }
 
-    // This attribute specifies that this method should handle HTTP PUT requests.
-    [HttpPut]
-    // Declares a public method named Update that takes an Account parameter and returns an IActionResult.
-    public IActionResult Update(Account account)
+    [HttpPut] // This attribute specifies that this method should handle HTTP PUT requests.
+    // Declares a public method named Update that takes an AccountDto parameter and returns an IActionResult.
+    public IActionResult Update(UpdateAccountDto accountDto)
     {
-        // Calls the Update method of the _accountRepository field with the account parameter and assigns the result to a local variable named result.
-        var result = _accountRepository.Update(account);
+        // Calls the GetByGuid method of the _accountRepository field with the Guid property of the accountDto parameter.
+        // Assigns the result to a local variable named entity.
+        var entity = _accountRepository.GetByGuid(accountDto.Guid);
+        if (entity is null)
+        {
+            return NotFound("Id Not Found"); // Returns a 404 Not Found response with a message if the entity is null.
+        }
+        // Assigns the accountDto parameter to a new Account object named toUpdate.
+        Account toUpdate = accountDto;
+        // Assigns the CreatedDate property of the entity object to the CreatedDate property of the toUpdate object.
+        toUpdate.CreatedDate = entity.CreatedDate;
+        // Calls the Update method of the _accountRepository field with the toUpdate object and assigns the result to a local variable named result.
+        var result = _accountRepository.Update(toUpdate);
         if (!result)
         {
-            // Returns a 400 Bad Request response with a message if the result is false.
-            return BadRequest("Failed to update data");
+            return BadRequest("Failed to update data"); // Returns a 400 Bad Request response with a message if the result is false.
         }
-        // Returns a 200 OK response with a message if it is not false.
-        return Ok("Data Updated");
+        return Ok("Data Updated"); // Returns a 200 OK response with a message if the update was successful.
     }
 
-    // This attribute specifies that this method should handle HTTP DELETE requests.
-    [HttpDelete]
+    [HttpDelete] // This attribute specifies that this method should handle HTTP DELETE requests.
     // Declares a public method named Delete that takes a Guid parameter and returns an IActionResult.
     public IActionResult Delete(Guid guid)
     {

@@ -1,6 +1,6 @@
 ﻿using API.Contracts;
+using API.DTO.Employees;
 using API.Models;
-using API.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -29,7 +29,10 @@ public class EmployeeController : ControllerBase
         {
             return NotFound("Data Not Found"); // Returns a 404 Not Found response with a message if the result is empty.
         }
-        return Ok(result); // Returns a 200 OK response with the result if it is not empty.
+        // Converts each Employee object in the result to a EmployeeDto object and assigns the result to a local variable named data.
+        var data = result.Select(x => (EmployeeDto)x);
+        // Returns a 200 OK response with the data if it is not empty.
+        return Ok(data); 
     }
 
     [HttpGet("{guid}")]
@@ -42,28 +45,41 @@ public class EmployeeController : ControllerBase
         {
             return NotFound("Id Not Found");
         }
-        return Ok(result);
+        // Returns a 200 OK response with the EmployeeDto object created from the result object.
+        return Ok((EmployeeDto)result);
     }
 
     [HttpPost]
-    // Declares a public method named Create that takes an Employee parameter and returns an IActionResult.
-    public IActionResult Create(Employee employee)
+    // Declares a public method named Create that takes a CreateEmployeeDto parameter and returns an IActionResult.
+    public IActionResult Create(CreateEmployeeDto employeeDto)
     {
-        // Calls the Create method of the _employeeRepository field with the employee parameter and assigns the result to a local variable named result.
-        var result = _employeeRepository.Create(employee);
+        // Calls the Create method of the _employeeRepository field with the employeeDto parameter and assigns the result to a local variable named result.
+        var result = _employeeRepository.Create(employeeDto);
         if (result is null)
         {
             return BadRequest("Failed to create data"); // Returns a 400 Bad Request response with a message if the result is null.
         }
-        return Ok(result);
+        // Returns a 200 OK response with the EmployeeDto object created from the result object.
+        return Ok((EmployeeDto)result);
     }
 
     [HttpPut]
-    // Declares a public method named Update that takes an Employee parameter and returns an IActionResult.
-    public IActionResult Update(Employee employee)
+    // Declares a public method named Update that takes an EmployeeDto parameter and returns an IActionResult.
+    public IActionResult Update(EmployeeDto employeeDto)
     {
-        // Calls the Update method of the _employeeRepository field with the employee parameter and assigns the result to a local variable named result.
-        var result = _employeeRepository.Update(employee);
+        // Calls the GetByGuid method of the _employeeRepository field with the Guid property of the employeeDto parameter.
+        // Assigns the result to a local variable named entity.
+        var entity = _employeeRepository.GetByGuid(employeeDto.Guid);
+        if (entity is null)
+        {
+            return NotFound("Id Not Found");
+        }
+        // Assigns the employeeDto parameter to a new Employee object named toUpdate.
+        Employee toUpdate = employeeDto;
+        // Assigns the CreatedDate property of the entity object to the CreatedDate property of the toUpdate object.
+        toUpdate.CreatedDate = entity.CreatedDate;
+        // Calls the Update method of the _employeeRepository field with the toUpdate object and assigns the result to a local variable named result.
+        var result = _employeeRepository.Update(toUpdate);
         if (!result)
         {
             return BadRequest("Failed to update data"); // Returns a 400 Bad Request response with a message if the result is false.
@@ -75,6 +91,7 @@ public class EmployeeController : ControllerBase
     // Declares a public method named Delete that takes a Guid parameter and returns an IActionResult.
     public IActionResult Delete(Guid guid)
     {
+        // Calls the GetByGuid method of the _employeeRepository field with the guid parameter and assigns the result to a local variable named entity.
         var entity = _employeeRepository.GetByGuid(guid);
         if (entity is null)
         {
