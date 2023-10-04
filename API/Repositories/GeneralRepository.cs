@@ -1,5 +1,6 @@
 ﻿using API.Contracts;
 using API.Data;
+using API.Utilities.Handlers;
 
 namespace API.Repositories;
 
@@ -38,9 +39,23 @@ public class GeneralRepository<TEntity> : IGeneralRepository<TEntity> where TEnt
             _context.SaveChanges(); // Saves changes to the database.
             return entity; // Returns the entity object.
         }
-        catch
+        catch (Exception ex)
         {
-            return null; // Returns null if there is an exception.
+            // Exception for Nik, Email, and Phone Number employees if already exist.
+            if (ex.InnerException is not null && ex.InnerException.Message.Contains("IX_tb_m_employees_nik"))
+            {
+                throw new ExceptionHandler("NIK already exists");
+            }
+            if (ex.InnerException is not null && ex.InnerException.Message.Contains("IX_tb_m_employees_email"))
+            {
+                throw new ExceptionHandler("Email already exists");
+            }
+            if (ex.InnerException != null && ex.InnerException.Message.Contains("IX_tb_m_employees_phone_number"))
+            {
+                throw new ExceptionHandler("Phone number already exists");
+            }
+            // Throws a new ExceptionHandler exception with the InnerException.Message property.
+            throw new ExceptionHandler(ex.InnerException?.Message ?? ex.Message);
         }
     }
 
@@ -53,9 +68,10 @@ public class GeneralRepository<TEntity> : IGeneralRepository<TEntity> where TEnt
             _context.SaveChanges(); // Saves changes to the database.
             return true; // Returns true if the update was successful.
         }
-        catch
+        catch (Exception ex)
         {
-            return false; // Returns false if there is an exception.
+            // Throws a new ExceptionHandler exception with the InnerException.Message property.
+            throw new ExceptionHandler(ex.InnerException?.Message ?? ex.Message);
         }
     }
 
@@ -68,9 +84,10 @@ public class GeneralRepository<TEntity> : IGeneralRepository<TEntity> where TEnt
             _context.SaveChanges(); // Saves changes to the database.
             return true; // This line returns true if the deletion was successful.
         }
-        catch
+        catch (Exception ex)
         {
-            return false; // Returns false if there is an exception.
+            // Throws a new ExceptionHandler exception with the InnerException.Message property.
+            throw new ExceptionHandler(ex.InnerException?.Message ?? ex.Message);
         }
     }
 }
