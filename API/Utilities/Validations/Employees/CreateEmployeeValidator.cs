@@ -20,9 +20,9 @@ public class CreateEmployeeValidator : AbstractValidator<CreateEmployeeDto>
            .NotEmpty().WithMessage("BirthDate must not be empty")
            .LessThanOrEqualTo(DateTime.Now.AddYears(-18)).WithMessage("Age must be greater than or equal to 18 years old");
 
-        // Declares a rule for the Gender property must not be empty and must be a valid enumeration value.
+        // Declares a rule for the Gender property must not be null and must be a valid enumeration value.
         RuleFor(e => e.Gender)
-           .NotEmpty().WithMessage("Gender must not be empty")
+           .NotNull().WithMessage("Gender must not be null")
            .IsInEnum();
 
         // Declares a rule for the HiringDate property.

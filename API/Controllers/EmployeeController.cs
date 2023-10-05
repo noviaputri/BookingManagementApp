@@ -12,13 +12,54 @@ namespace API.Controllers;
 // Declares a new class named EmployeeController that inherits from ControllerBase.
 public class EmployeeController : ControllerBase
 {
-    // Declares a private field of type IEmployeeRepository.
+    // Declares a private field of type IEmployeeRepository, IEducationRepository and IUniversityRepository.
     private readonly IEmployeeRepository _employeeRepository;
+    private readonly IEducationRepository _educationRepository;
+    private readonly IUniversityRepository _universityRepository;
 
-    // Declares a public constructor that takes an IEmployeeRepository parameter.
-    public EmployeeController(IEmployeeRepository employeeRepository)
+    // Declares a public constructor that takes an IEmployeeRepository, IEducationRepository and IUniversityRepository parameter.
+    public EmployeeController(IEmployeeRepository employeeRepository, IEducationRepository educationRepository, IUniversityRepository universityRepository)
     {
         _employeeRepository = employeeRepository;
+        _educationRepository = educationRepository;
+        _universityRepository = universityRepository;
+    }
+
+    [HttpGet("details")]
+    public IActionResult GetDetails()
+    {
+        var employees = _employeeRepository.GetAll();
+        var educations = _educationRepository.GetAll();
+        var universities = _universityRepository.GetAll();
+
+        if (!(employees.Any() && educations.Any() && universities.Any()))
+        {
+            return NotFound(new ResponseErrorHandler
+            {
+                Code = StatusCodes.Status404NotFound,
+                Status = HttpStatusCode.NotFound.ToString(),
+                Message = "Data Not Found"
+            });
+        }
+        var employeeDetails = from emp in employees
+                              join edu in educations on emp.Guid equals edu.Guid
+                              join unv in universities on edu.UniversityGuid equals unv.Guid
+                              select new EmployeeDetailDto
+                              {
+                                  Guid = emp.Guid,
+                                  Nik = emp.Nik,
+                                  FullName = string.Concat(emp.FirstName, " ", emp.LastName),
+                                  BirthDate = emp.BirthDate,
+                                  Gender = emp.Gender.ToString(),
+                                  HiringDate = emp.HiringDate,
+                                  Email = emp.Email,
+                                  PhoneNumber = emp.PhoneNumber,
+                                  Major = edu.Major,
+                                  Degree = edu.Degree,
+                                  Gpa = edu.Gpa,
+                                  University = unv.Name
+                              };
+        return Ok(new ResponseOkHandler<IEnumerable<EmployeeDetailDto>>(employeeDetails));
     }
 
     [HttpGet]

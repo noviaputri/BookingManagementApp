@@ -21,8 +21,8 @@ public class CreateAccountValidator : AbstractValidator<CreateAccountDto>
             .Matches("[^a-zA-Z0-9]").WithMessage("Password must contain at least one special character");
         //.Matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$")
 
-        // Declares a rule for the Otp property must not be empty.
-        RuleFor(a => a.Otp).NotEmpty().WithMessage("Otp must not be empty");
+        // Declares a rule for the Otp property must not be null.
+        RuleFor(a => a.Otp).NotNull().WithMessage("Otp must not be null");
 
         // Declares a rule for the IsUsed property must not be empty.
         RuleFor(a => a.IsUsed).NotEmpty().WithMessage("IsUsed must not be empty");

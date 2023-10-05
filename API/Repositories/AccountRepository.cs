@@ -8,5 +8,5 @@ namespace API.Repositories;
 public class AccountRepository : GeneralRepository<Account>, IAccountRepository
 {
     // Declares a public constructor that takes a BookingManagementDbContext parameter and calls the base constructor with the context parameter.
-    public AccountRepository(BookingManagementDbContext context) : base(context) { }
+    public AccountRepository(BookingManagementDbContext context) : base(context) {}
 }
