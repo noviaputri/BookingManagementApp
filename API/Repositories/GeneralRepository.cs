@@ -7,8 +7,8 @@ namespace API.Repositories;
 // Declares a new public class named GeneralRepository with a generic type parameter TEntity that implements the IGeneralRepository interface.
 public class GeneralRepository<TEntity> : IGeneralRepository<TEntity> where TEntity : class
 {
-    // Declares a private field of type BookingManagementDbContext.
-    private readonly BookingManagementDbContext _context;
+    // Declares a protected field of type BookingManagementDbContext.
+    protected readonly BookingManagementDbContext _context;
 
     // Declares a protected constructor that takes a BookingManagementDbContext parameter.
     protected GeneralRepository(BookingManagementDbContext context)

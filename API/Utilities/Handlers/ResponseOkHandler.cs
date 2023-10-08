@@ -29,4 +29,14 @@ public class ResponseOkHandler<TEntity>
         Status = HttpStatusCode.OK.ToString();
         Message = message;
     }
+
+    // Declares a public constructor that takes a string and TEntity parameter.
+    public ResponseOkHandler(string message, TEntity data)
+    {
+        // Assigns the value of every ResponseOkHandler property.
+        Code = StatusCodes.Status200OK;
+        Status = HttpStatusCode.OK.ToString();
+        Message = message;
+        Data = data;
+    }
 }

@@ -1,9 +1,8 @@
 ﻿using API.Contracts;
-using API.Data;
 using API.DTO.Educations;
-using API.DTO.Employees;
 using API.Models;
 using API.Utilities.Handlers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -11,6 +10,7 @@ namespace API.Controllers;
 
 [ApiController] // This attribute indicates that the class is an API controller.
 [Route("api/[controller]")] // This attribute specifies the route prefix for the controller
+[Authorize] // Implement authorization
 // Declares a new class named EducationController that inherits from ControllerBase.
 public class EducationController : ControllerBase
 {

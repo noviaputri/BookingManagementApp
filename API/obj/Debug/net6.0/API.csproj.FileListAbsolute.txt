@@ -70,3 +70,4 @@ C:\Users\novia\source\repos\BookingManagementApp\API\bin\Debug\net6.0\BCrypt.Net
 C:\Users\novia\source\repos\BookingManagementApp\API\bin\Debug\net6.0\FluentValidation.dll
 C:\Users\novia\source\repos\BookingManagementApp\API\bin\Debug\net6.0\FluentValidation.AspNetCore.dll
 C:\Users\novia\source\repos\BookingManagementApp\API\bin\Debug\net6.0\FluentValidation.DependencyInjectionExtensions.dll
+C:\Users\novia\source\repos\BookingManagementApp\API\bin\Debug\net6.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll

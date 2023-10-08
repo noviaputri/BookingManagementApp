@@ -2,23 +2,173 @@
 using API.DTO.Bookings;
 using API.Models;
 using API.Utilities.Handlers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
 namespace API.Controllers;
 
 [ApiController] // This attribute indicates that the class is an API controller.
-[Route("api/[controller]")] // This attribute specifies the route prefix for the controller
+[Route("api/[controller]")] // This attribute specifies the route prefix for the controller.
+[Authorize] // Implement authorization.
 // Declares a new class named BookingController that inherits from ControllerBase.
 public class BookingController : ControllerBase
 {
-    // Declares a private field of type IBookingRepository.
+    // Declares a private field of type IBookingRepository, IEmployeeRepository and IRoomRepository.
     private readonly IBookingRepository _bookingRepository;
+    private readonly IEmployeeRepository _employeeRepository;
+    private readonly IRoomRepository _roomRepository;
 
-    // Declares a public constructor that takes an IBookingRepository parameter.
-    public BookingController(IBookingRepository bookingRepository)
+    // Declares a public constructor that takes an IBookingRepository, IEmployeeRepository and IRoomRepository parameter.
+    public BookingController(IBookingRepository bookingRepository, IEmployeeRepository employeeRepository, IRoomRepository roomRepository)
     {
         _bookingRepository = bookingRepository;
+        _employeeRepository = employeeRepository;
+        _roomRepository = roomRepository;
+    }
+
+    [HttpGet("bookingDetails")]
+    // Declares a public method named GetBookingDetails and returns an IActionResult.
+    public IActionResult GetBookingDetails()
+    {
+        try
+        {
+            var bookings = _bookingRepository.GetAll();
+            var employees = _employeeRepository.GetAll();
+            var rooms = _roomRepository.GetAll();
+            // Check if any data bookings, employees and rooms or not
+            if (!(bookings.Any() && employees.Any() && rooms.Any()))
+            {
+                return NotFound(new ResponseErrorHandler
+                {
+                    Code = StatusCodes.Status404NotFound,
+                    Status = HttpStatusCode.NotFound.ToString(),
+                    Message = "Data Not Found"
+                });
+            }
+            // Join data bookings, employees and rooms to get booking details
+            var bookingDetails = from b in bookings
+                                 join e in employees on b.EmployeeGuid equals e.Guid
+                                 join r in rooms on b.RoomGuid equals r.Guid
+                                 select new BookingDetailDto
+                                 {
+                                     Guid = b.Guid,
+                                     BookedNIK = e.Nik,
+                                     BookedBy = string.Concat(e.FirstName, " ", e.LastName),
+                                     RoomName = r.Name,
+                                     StartDate = b.StartDate,
+                                     EndDate = b.EndDate,
+                                     Status = b.Status.ToString(),
+                                     Remarks = b.Remarks
+                                 };
+            // Returns a 200 OK response with the BookingDetailDto object created from the result object.
+            return Ok(new ResponseOkHandler<IEnumerable<BookingDetailDto>>(bookingDetails));
+        }
+        catch (ExceptionHandler ex)
+        {
+            // Returns a 500 Internal Server Error response with a new ResponseErrorHandler object.
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseErrorHandler
+            {
+                Code = StatusCodes.Status500InternalServerError,
+                Status = HttpStatusCode.InternalServerError.ToString(),
+                Message = "Failed to get details booking",
+                Error = ex.Message
+            });
+        }
+    }
+
+    [HttpGet("bookingDetail/{bookingGuid}")]
+    // Declares a public method named GetBookingDetailGuid that takes a Guid parameter and returns an IActionResult.
+    public IActionResult GetBookingDetailGuid(Guid bookingGuid)
+    {
+        try
+        {
+            var bookings = _bookingRepository.GetAll();
+            var employees = _employeeRepository.GetAll();
+            var rooms = _roomRepository.GetAll();
+            // Check if any data bookings, employees, and rooms or not
+            if (!(bookings.Any() && employees.Any() && rooms.Any()))
+            {
+                return NotFound(new ResponseErrorHandler
+                {
+                    Code = StatusCodes.Status404NotFound,
+                    Status = HttpStatusCode.NotFound.ToString(),
+                    Message = "Data Not Found"
+                });
+            }
+            // Join data bookings, employees, and rooms to get booking detail by bookingGuid
+            var bookingDetailByGuid = from b in bookings
+                                      join e in employees on b.EmployeeGuid equals e.Guid
+                                      join r in rooms on b.RoomGuid equals r.Guid
+                                      where b.Guid == bookingGuid
+                                      select new BookingDetailDto
+                                      {
+                                          Guid = bookingGuid,
+                                          BookedNIK = e.Nik,
+                                          BookedBy = string.Concat(e.FirstName, " ", e.LastName),
+                                          RoomName = r.Name,
+                                          StartDate = b.StartDate,
+                                          EndDate = b.EndDate,
+                                          Status = b.Status.ToString(),
+                                          Remarks = b.Remarks
+                                      };
+            // Returns a 200 OK response with the BookingDetailDto object created from the result object.
+            return Ok(new ResponseOkHandler<IEnumerable<BookingDetailDto>>(bookingDetailByGuid));
+        }
+        catch (ExceptionHandler ex)
+        {
+            // Returns a 500 Internal Server Error response with a new ResponseErrorHandler object.
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseErrorHandler
+            {
+                Code = StatusCodes.Status500InternalServerError,
+                Status = HttpStatusCode.InternalServerError.ToString(),
+                Message = "Failed to get detail booking",
+                Error = ex.Message
+            });
+        }
+    }
+
+    [HttpGet("bookingLengthDetails")]
+    // Declares a public method named GetBookingLengthDetails and returns an IActionResult.
+    public IActionResult GetBookingLengthDetails()
+    {
+        try
+        {
+            var bookings = _bookingRepository.GetAll();
+            var rooms = _roomRepository.GetAll();
+            // Check if any data bookings and rooms or not
+            if (!(bookings.Any() && rooms.Any()))
+            {
+                return NotFound(new ResponseErrorHandler
+                {
+                    Code = StatusCodes.Status404NotFound,
+                    Status = HttpStatusCode.NotFound.ToString(),
+                    Message = "Data Not Found"
+                });
+            }
+            // Join data bookings and rooms to get booking length details
+            var bookingLengthDetails = from b in bookings
+                                       join r in rooms on b.RoomGuid equals r.Guid
+                                       select new BookingLengthDetailDto
+                                       {
+                                           RoomGuid = b.Guid,
+                                           RoomName = r.Name,
+                                           BookingLength = _bookingRepository.GetBookingLength(b.StartDate, b.EndDate)
+                                       };
+            // Returns a 200 OK response with the BookingLengthDetailDto object created from the result object.
+            return Ok(new ResponseOkHandler<IEnumerable<BookingLengthDetailDto>>(bookingLengthDetails));
+        }
+        catch (ExceptionHandler ex)
+        {
+            // Returns a 500 Internal Server Error response with a new ResponseErrorHandler object.
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseErrorHandler
+            {
+                Code = StatusCodes.Status500InternalServerError,
+                Status = HttpStatusCode.InternalServerError.ToString(),
+                Message = "Failed to get length details booking",
+                Error = ex.Message
+            });
+        }
     }
 
     [HttpGet]

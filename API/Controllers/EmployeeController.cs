@@ -2,6 +2,7 @@
 using API.DTO.Employees;
 using API.Models;
 using API.Utilities.Handlers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -9,6 +10,7 @@ namespace API.Controllers;
 
 [ApiController] // This attribute indicates that the class is an API controller.
 [Route("api/[controller]")] // This attribute specifies the route prefix for the controller
+[Authorize] // Implement authorization
 // Declares a new class named EmployeeController that inherits from ControllerBase.
 public class EmployeeController : ControllerBase
 {
@@ -31,7 +33,7 @@ public class EmployeeController : ControllerBase
         var employees = _employeeRepository.GetAll();
         var educations = _educationRepository.GetAll();
         var universities = _universityRepository.GetAll();
-
+        // Check if any data employee, education, and university or not
         if (!(employees.Any() && educations.Any() && universities.Any()))
         {
             return NotFound(new ResponseErrorHandler
@@ -41,6 +43,7 @@ public class EmployeeController : ControllerBase
                 Message = "Data Not Found"
             });
         }
+        // Join data employees, educations, and universities to get employee details
         var employeeDetails = from emp in employees
                               join edu in educations on emp.Guid equals edu.Guid
                               join unv in universities on edu.UniversityGuid equals unv.Guid

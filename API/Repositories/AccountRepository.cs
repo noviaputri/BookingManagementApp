@@ -9,4 +9,10 @@ public class AccountRepository : GeneralRepository<Account>, IAccountRepository
 {
     // Declares a public constructor that takes a BookingManagementDbContext parameter and calls the base constructor with the context parameter.
     public AccountRepository(BookingManagementDbContext context) : base(context) {}
+
+    // Implements the GetContext method of the IAccountRepository interface.
+    public BookingManagementDbContext GetContext()
+    {
+        return _context;
+    }
 }

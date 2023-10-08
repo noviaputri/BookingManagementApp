@@ -2,6 +2,7 @@
 using API.DTO.Rooms;
 using API.Models;
 using API.Utilities.Handlers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -9,16 +10,100 @@ namespace API.Controllers;
 
 [ApiController] // This attribute indicates that the class is an API controller.
 [Route("api/[controller]")] // This attribute specifies the route prefix for the controller
+[Authorize] // Implement authorization
 // Declares a new class named RoomController that inherits from ControllerBase.
 public class RoomController : ControllerBase
 {
     // Declares a private field of type IRoomRepository.
     private readonly IRoomRepository _roomRepository;
+    private readonly IBookingRepository _bookingRepository;
+    private readonly IEmployeeRepository _employeeRepository;
 
     // Declares a public constructor that takes an IRoomRepository parameter.
-    public RoomController(IRoomRepository roomRepository)
+    public RoomController(IRoomRepository roomRepository, IBookingRepository bookingRepository, IEmployeeRepository employeeRepository)
     {
         _roomRepository = roomRepository;
+        _bookingRepository = bookingRepository;
+        _employeeRepository = employeeRepository;
+    }
+
+    [HttpGet("roomsUsed")]
+    public IActionResult GetRoomsUsed()
+    {
+        // Check if any room, booking, and employee or not
+        var rooms = _roomRepository.GetAll();
+        var bookings = _bookingRepository.GetAll();
+        var employees = _employeeRepository.GetAll();
+        if (!(rooms.Any() && bookings.Any() && employees.Any()))
+        {
+            return NotFound(new ResponseErrorHandler
+            {
+                Code = StatusCodes.Status404NotFound,
+                Status = HttpStatusCode.NotFound.ToString(),
+                Message = "Data Not Found"
+            });
+        }
+        // Join data rooms, bookings, and employees to get roomsUseToday details
+        var roomsUseToday = from r in rooms
+                            join b in bookings on r.Guid equals b.RoomGuid
+                            join e in employees on b.EmployeeGuid equals e.Guid
+                            where (b.StartDate <= DateTime.Today) && (b.EndDate > DateTime.Today)
+                            select new RoomUseTodayDto
+                            {
+                                BookingGuid = b.Guid,
+                                RoomName = r.Name,
+                                Status = b.Status.ToString(),
+                                Floor = r.Floor,
+                                BookBy = string.Concat(e.FirstName, " ", e.LastName)
+                            };
+        if(!roomsUseToday.Any())
+        {
+            return NotFound(new ResponseErrorHandler
+            {
+                Code = StatusCodes.Status404NotFound,
+                Status = HttpStatusCode.NotFound.ToString(),
+                Message = "Room Not Found"
+            });
+        }
+        return Ok(new ResponseOkHandler<IEnumerable<RoomUseTodayDto>>(roomsUseToday));
+    }
+
+    [HttpGet("roomsNotUsed")]
+    public IActionResult GetRoomsNotUsed()
+    {
+        // Check if any room and booking or not
+        var rooms = _roomRepository.GetAll();
+        var bookings = _bookingRepository.GetAll();
+        if (!(rooms.Any() && bookings.Any()))
+        {
+            return NotFound(new ResponseErrorHandler
+            {
+                Code = StatusCodes.Status404NotFound,
+                Status = HttpStatusCode.NotFound.ToString(),
+                Message = "Data Not Found"
+            });
+        }
+        // Join data rooms and bookings to get roomsNotUseToday details
+        var roomsNotUseToday = from r in rooms
+                               join b in bookings on r.Guid equals b.RoomGuid
+                               where (b.StartDate > DateTime.Today) || (b.EndDate <= DateTime.Today)
+                               select new RoomNotUseTodayDto
+                               {
+                                   RoomGuid = r.Guid,
+                                   RoomName = r.Name,
+                                   Floor = r.Floor,
+                                   Capacity = r.Capacity
+                               };
+        if (!roomsNotUseToday.Any())
+        {
+            return NotFound(new ResponseErrorHandler
+            {
+                Code = StatusCodes.Status404NotFound,
+                Status = HttpStatusCode.NotFound.ToString(),
+                Message = "Room Not Found"
+            });
+        }
+        return Ok(new ResponseOkHandler<IEnumerable<RoomNotUseTodayDto>>(roomsNotUseToday));
     }
 
     [HttpGet]
