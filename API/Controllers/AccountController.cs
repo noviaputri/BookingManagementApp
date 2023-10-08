@@ -1,42 +1,53 @@
 ﻿using API.Contracts;
-using API.Data;
+using API.DTO.AccountRoles;
 using API.DTO.Accounts;
 using API.DTO.Educations;
 using API.DTO.Employees;
 using API.DTO.Universities;
 using API.Models;
 using API.Utilities.Handlers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Net;
+using System.Security.Claims;
 
 namespace API.Controllers;
 
 [ApiController] // This attribute indicates that the class is an API controller.
-[Route("api/[controller]")] // This attribute specifies the route prefix for the controller
+[Route("api/[controller]")] // This attribute specifies the route prefix for the controller.
+[Authorize] // Implement authorization.
 // Declares a new class named AccountController that inherits from ControllerBase.
 public class AccountController : ControllerBase
 {
-    // Declares a private field of type IAccountRepository, IEmployeeRepository, IUniversityRepository, IEducationRepository and BookingManagementDbContext.
+    // Declares a private field of type IAccountRepository, IAccountRoleRepository and IEducationRepository.
+    // Declares a private field of type IEmployeeRepository, IRoleRepository and IUniversityRepository.
+    // Declares a private field of type IEmailHandler and ITokenHandler.
     private readonly IAccountRepository _accountRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUniversityRepository _universityRepository;
+    private readonly IAccountRoleRepository _accountRoleRepository;
     private readonly IEducationRepository _educationRepository;
+    private readonly IEmployeeRepository _employeeRepository;
+    private readonly IRoleRepository _roleRepository;
+    private readonly IUniversityRepository _universityRepository;
     private readonly IEmailHandler _emailHandler;
-    private readonly BookingManagementDbContext _context;
+    private readonly ITokenHandler _tokenHandler;
 
-    // Declares a public constructor that takes an IAccountRepository parameter.
-    public AccountController(IAccountRepository accountRepository, IEmployeeRepository employeeRepository, IUniversityRepository universityRepository, IEducationRepository educationRepository, IEmailHandler emailHandler, BookingManagementDbContext bookingManagementDbContext)
+    // Declares a public constructor of AccountController class.
+    public AccountController(IAccountRepository accountRepository, IAccountRoleRepository accountRoleRepository, IEducationRepository educationRepository, 
+        IEmployeeRepository employeeRepository, IRoleRepository roleRepository, IUniversityRepository universityRepository, IEmailHandler emailHandler, 
+        ITokenHandler tokenHandler)
     {
         _accountRepository = accountRepository;
-        _employeeRepository = employeeRepository;
-        _universityRepository = universityRepository;
+        _accountRoleRepository = accountRoleRepository;
         _educationRepository = educationRepository;
+        _employeeRepository = employeeRepository;
+        _roleRepository = roleRepository;
+        _universityRepository = universityRepository;
         _emailHandler = emailHandler;
-        _context = bookingManagementDbContext;
+        _tokenHandler = tokenHandler;
     }
 
     [HttpPost("forgotpassword")] // This attribute specifies that this method should handle HTTP POST requests for forgotpassword.
+    [AllowAnonymous] // Bypasses authorization statements.
     public IActionResult ForgotPassword(string email)
     {
         // Check if email already exist or not
@@ -77,6 +88,7 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost("changepassword")] // This attribute specifies that this method should handle HTTP POST requests for changepassword.
+    [AllowAnonymous] // Bypasses authorization statements.
     public IActionResult ChangePassword(ChangePasswordDto changePasswordDto) 
     {
         try
@@ -150,10 +162,10 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost("register")] // This attribute specifies that this method should handle HTTP POST requests for register.
+    [AllowAnonymous] // Bypasses authorization statements.
     public IActionResult Register(RegisterDto registerDto)
     {
-        using var connection = _context.Database.GetDbConnection();
-        connection.Open();
+        using var _context = _accountRepository.GetContext();
         using (var transaction = _context.Database.BeginTransaction())
         {
             try
@@ -227,15 +239,21 @@ public class AccountController : ControllerBase
                 };
                 Account createAccount = accountToCreate;
                 createAccount.Password = HashHandler.HashPassword(accountToCreate.Password);
-                var result = _accountRepository.Create(createAccount);
+                var accountResult = _accountRepository.Create(createAccount);
+                // Create a new account role object
+                var accountRoleToCreatee = new CreateAccountRoleDto
+                {
+                    AccountGuid = accountResult.Guid,
+                    RoleGuid = _roleRepository.GetDefaultRoleGuid() ?? throw new Exception("Default Role Not Found")
+                };
+                var accountRoleResult = _accountRoleRepository.Create(accountRoleToCreatee);
                 // Save changes to database
                 _context.SaveChanges();
                 transaction.Commit();
-                connection.Close();
                 // Return a success response
                 return Ok(new ResponseOkHandler<string>("User registered successfully"));
             }
-            catch (Exception ex)
+            catch (ExceptionHandler ex)
             {
                 // Rollback transaction if there is an exception
                 transaction.Rollback();
@@ -252,34 +270,63 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost("login")] // This attribute specifies that this method should handle HTTP POST requests for login.
+    [AllowAnonymous] // Bypasses authorization statements.
     public IActionResult Login(string email, string password)
     {
-        // Check if email already exist or not
-        var employees = _employeeRepository.GetAll();
-        var employee = employees.FirstOrDefault(e => e.Email == email);
-        if (employee == null)
+        try
         {
-            return BadRequest(new ResponseErrorHandler
+            // Check if email already exist or not
+            var employees = _employeeRepository.GetAll();
+            var employee = employees.FirstOrDefault(e => e.Email == email);
+            if (employee == null)
             {
-                Code = StatusCodes.Status400BadRequest,
-                Status = HttpStatusCode.BadRequest.ToString(),
-                Message = "Email is invalid"
+                return BadRequest(new ResponseErrorHandler
+                {
+                    Code = StatusCodes.Status400BadRequest,
+                    Status = HttpStatusCode.BadRequest.ToString(),
+                    Message = "Email is invalid"
+                });
+            }
+            // Check if password is correct
+            var account = _accountRepository.GetByGuid(employee.Guid);
+            var verifyPassword = HashHandler.VerifyPassword(password, account.Password);
+            if (!verifyPassword)
+            {
+                return BadRequest(new ResponseErrorHandler
+                {
+                    Code = StatusCodes.Status400BadRequest,
+                    Status = HttpStatusCode.BadRequest.ToString(),
+                    Message = "Password is invalid"
+                });
+            }
+            // Generates a token from the specified collection of claims using the token handler.
+            var claims = new List<Claim>();
+            claims.Add(new Claim("Email", employee.Email));
+            claims.Add(new Claim("FullName", string.Concat(employee.FirstName + " " + employee.LastName)));
+            // Add RoleName claim
+            var getRoleName = from ar in _accountRoleRepository.GetAll()
+                              join r in _roleRepository.GetAll() on ar.RoleGuid equals r.Guid
+                              where ar.AccountGuid == account.Guid
+                              select r.Name;
+            foreach (var roleName in getRoleName)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, roleName));
+            }
+            var generateToken = _tokenHandler.Generate(claims);
+            // Return a success response
+            return Ok(new ResponseOkHandler<object>("Login successfully", new { Token = generateToken }));
+        }
+        catch (ExceptionHandler ex)
+        {
+            // Returns a 500 Internal Server Error response with a new ResponseErrorHandler object.
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseErrorHandler
+            {
+                Code = StatusCodes.Status500InternalServerError,
+                Status = HttpStatusCode.InternalServerError.ToString(),
+                Message = "Failed to Login",
+                Error = ex.Message
             });
         }
-        // Check if password is correct
-        var account = _accountRepository.GetByGuid(employee.Guid);
-        var verifyPassword = HashHandler.VerifyPassword(password, account.Password);
-        if (!verifyPassword)
-        {
-            return BadRequest(new ResponseErrorHandler
-            {
-                Code = StatusCodes.Status400BadRequest,
-                Status = HttpStatusCode.BadRequest.ToString(),
-                Message = "Password is invalid"
-            });
-        }
-        // Return a success response
-        return Ok(new ResponseOkHandler<string>("Login successfully"));
     }
 
     [HttpGet] // This attribute specifies that this method should handle HTTP GET requests.
